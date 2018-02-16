@@ -1,12 +1,14 @@
+// NOTE Y'ALL!
+// Anything we bring in scope here is complete open to being screwed with via the UI!!!!
 function getParser(brain){
     return {
-        parse: function(){
+        parse: function(vars){
             let script = document.getElementById(constants.editTextId).value
-            // console.log(script)
-
-            // console.log("before " + brain.thrust + brain.torque)
-            eval(script)
-            // console.log("after " + brain.thrust + brain.torque)
+            try{
+                eval(script)
+            } catch (e){
+                // why worry?
+            }
         }
     }
 }

@@ -32,7 +32,15 @@ function initCanvas(){
 }
 
 function mainLoop(renderer, state, parser, physics){
-    parser.parse()
+    parser.parse(getUserVars(state, physics))
     physics.step(state)
     renderer.render()
+}
+
+function getUserVars(state, physics){
+    // Construct some vars to make available to user scripts
+    // Don't return any pointers to internal things here! users will be able to mess with them!
+    return {
+        ship: JSON.parse(JSON.stringify(physics.ship))
+    }
 }
