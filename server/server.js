@@ -1,11 +1,3 @@
-
-// You will need to install the node websockets package to run the server.
-// The command is:
-// $npm install websocket
-// 
-// then run with:
-// $node server.js
-
 "use strict";
 
 process.title = "space-lizard-test"
@@ -27,6 +19,15 @@ const wsServer = new webSocketServer({
     httpServer: server
 })
 
+//Connect to local version of Redis
+//Defaulted to localhost and port 6379
+var redis = require('redis')
+var redisClient = redis.createClient()
+
+redisClient.on('connect', function () {
+    console.log("Redis connected")
+})
+
 // Main websocket connection code.
 wsServer.on("request", function(request) {
     // accept connection - you should check "request.origin" to
@@ -43,7 +44,7 @@ wsServer.on("request", function(request) {
     }
 
     // Let's repeatedly send this
-    setInterval(() => connection.sendUTF(JSON.stringify(data)), 1000)
+    //setInterval(() => connection.sendUTF(JSON.stringify(data)), 100)
 
     // On recieving a message.
     connection.on("message", function(message) {
@@ -61,8 +62,6 @@ wsServer.on("request", function(request) {
                 console.log("Invalid message dataString [" + dataString + "]");
                 return;
             }
-
-            // Now we have a "data" object recieved from a client
         }
     })
 
