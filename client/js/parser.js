@@ -4,9 +4,9 @@ function getParser(brain){
             let script = document.getElementById(constants.editTextId).innerHTML
             console.log(script)
 
-            console.log("before " + brain.a + brain.t)
+            console.log("before " + brain.thrust + brain.torque)
             eval(script)
-            console.log("after " + brain.a + brain.t)
+            console.log("after " + brain.thrust + brain.torque)
         }
     }
 }
