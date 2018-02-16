@@ -22,7 +22,7 @@ function initCanvas(){
     // Inject the canvas
     document.body.innerHTML += `<canvas id=${constants.canvasId} width=${constants.canvasDimensions[0]} height=${constants.canvasDimensions[1]}></canvas>`
     // And the scripting box
-    document.body.innerHTML += `<div id=${constants.editTextId} contenteditable="true">brain.torque = 1; brain.thrust = 1</div>`
+    document.body.innerHTML += `<div id=${constants.editTextId} contenteditable="true">brain.torque = -0.00; brain.thrust = 0.01</div>`
     return document.getElementById(constants.canvasId).getContext("2d")
 }
 

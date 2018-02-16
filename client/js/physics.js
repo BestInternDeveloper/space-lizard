@@ -4,11 +4,10 @@ function getPhysics(screenDimensions){
     const pMax = [1000.0,800.0]
     const fMin = 0.0
     const fMax = Math.PI * 2.0
-    const sMin = 0.0
     const sMax = 10.0
     const thrustMin = 0.0
     const thrustMax = 0.1
-    const oLim = 1.0
+    const oLim = 0.1
     const oMin = -oLim
     const oMax = oLim
     const torqueLim = 0.1
@@ -18,17 +17,18 @@ function getPhysics(screenDimensions){
     // We need five 2D vectors to track completely a ship.
     // We will represent angular movement with a single value, rather than a vector.
     // We will also simplify with dt = 1 (and lock the game speed to the server frame rate)
+    // AKA "hand-wavy physics"
     
     const ship = {}
     // Position p. 
     // This is the position of the ship within the game universe.
     ship.p = [500.0,500.0]
     // Facing f
-    // This is the direction the ship is facing, from 0 (up) through pi (down), periodic with 2pi=0
-    ship.f = 0.0
-    // Speed s
-    // The speed of the ship in the direction of facing f
-    ship.s = 0.0
+    // This is the direction the ship is facing, from 0 (down) through pi (up), periodic with 2pi=0
+    ship.f = 3*Math.PI/2
+    // Velocity v
+    // Velocity of the ship.
+    ship.v = [0.0,0.0]
     // Thrust
     // The acceleration in the direction of facing f. This value is set by the client.
     ship.thrust = 0.0
@@ -38,6 +38,14 @@ function getPhysics(screenDimensions){
     // Torque
     // The rate of change of angular velocity clockwise (positive) or anticlockwise (negative), i.e. how fast the ship's spinning speeds up or slows down. This value is set by the client.
     ship.torque = 0.0
+
+    // Get the unit vector of the ship's direction
+    ship.getDirection = function(){
+        return [
+            Math.sin(ship.f),
+            Math.cos(ship.f)
+        ]
+    }
 
     // Transform from universe coordinates to screen pixels.
     ship.toPixels = function () {
@@ -49,28 +57,13 @@ function getPhysics(screenDimensions){
         ]
     }
 
-    // Apply boundary conditions
-    ship.limit = function(){
-        applyPeriodicLimitArray(ship.p, pMin, pMax)
-        // Periodic facing conditions so we spin naturally. we ignore any overshoot - as long as we limit omega this should not be noticeable.
-        if(ship.f < fMin) ship.f = fMax;
-        if(ship.f >= fMax) ship.f = fMin;
-        // Hard limits on all other values
-        if(ship.s < sMin) ship.s = sMin;
-        if(ship.s >= sMax) ship.s = sMax;
-        ship.thrust = limitThrust(ship.thrust)
-        if(ship.o < oMin) ship.o = oMin;
-        if(ship.o >= oMax) ship.o = oMax;
-        ship.torque = limitTorque(ship.torque)
-    }
-
     // When we leave the right side of the universe, we emerge on the left (same with up/down)
     // Note: the universe is inscribed on a donut.
     function applyPeriodicLimitArray(array2d, lower, upper){
         if(array2d[0] < lower[0]) array2d[0] = upper[0];
         if(array2d[1] < lower[1]) array2d[1] = upper[1];
-        if(array2d[0] >= upper[0]) array2d[0] = lower[0];
-        if(array2d[1] >= upper[1]) array2d[1] = lower[1];
+        if(array2d[0] > upper[0]) array2d[0] = lower[0];
+        if(array2d[1] > upper[1]) array2d[1] = lower[1];
     }
 
     function limitTorque(t){
@@ -85,17 +78,49 @@ function getPhysics(screenDimensions){
         return t;
     }
 
+    function limitOmega(o){
+        if(o < oMin) return oMin;
+        if(o >= oMax) return oMax;
+        return o;
+    }
+
+    function limitFacing(f){
+        // Periodic, but we will adjust to maintain positivity ^_^
+        const f2 = f%fMax
+        if(f2<=fMin) return fMax-f2;
+        return f2
+    }
+
+    function limitVelocity(v){
+        // A little more involved, as we want to ensure the magnitude of vector v below sMax
+        const speed = Math.sqrt((ship.v[0]*ship.v[0])+(ship.v[1]*ship.v[1]))
+        if(speed > sMax){
+            // If it is out of bounds we need to scale the vector down to magnitude sMax.
+            return [
+                v[0] * sMax / speed,
+                v[1] * sMax / speed
+            ]
+        }
+        return v
+    }
+
     // Basic Euler integration
     function step(state){
         // Set values from the ship's brain
         ship.torque = limitTorque(state.brain.torque)
         ship.thrust = limitThrust(state.brain.thrust)
-        // Update speed
-        ship.s = ship.s + ship.thrust
+        // Apply torque to o
+        ship.o = limitOmega(ship.o + ship.torque)
+        // Apply omega to facing
+        ship.f = limitFacing(ship.f + ship.o)
+        // Update velocity, by applying thrust in the ship's direction
+        const d = ship.getDirection()
+        const acceleration = [ship.thrust * d[0], ship.thrust * d[1]]
+        ship.v = limitVelocity([ship.v[0] + acceleration[0], ship.v[1] + acceleration[1]])
         // Update position
-        ship.p[0] = ship.p[0] + ship.s
-        ship.p[1] = ship.p[1] + ship.s
-        ship.limit()
+        ship.p[0] = ship.p[0] + ship.v[0]
+        ship.p[1] = ship.p[1] + ship.v[1]
+        applyPeriodicLimitArray(ship.p, pMin, pMax)
     }
 
     return {
