@@ -1,4 +1,5 @@
-function initState(){
+//initialise the state of all the ships in the game which can be rendered.
+function initState(brain){
     return {
         state: "initialised",
         set: function(s){this.state = s},
@@ -8,6 +9,6 @@ function initState(){
         // Client side forecast for rendering at 60fps
         forecast: null,
         // AI for our ship
-        brain: null
+        brain: brain
     }
 }
