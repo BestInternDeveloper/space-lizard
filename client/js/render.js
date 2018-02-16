@@ -14,7 +14,7 @@ function getRenderer(ctx, state, physics){
     function drawShip(ctx, ship){
         const pix = physics.ship.toPixels()
         const v = physics.ship.getDirection()
-        const vp = [v[1], v[0]]
+        const vp = [-v[1], v[0]]
         const scale = 15
         // Lets start with a line in the ship's facing direction
         ctx.strokeStyle = constants.shipColor
