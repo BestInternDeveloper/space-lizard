@@ -19,10 +19,15 @@
 })()
 
 function initCanvas(){
+    wrap = (tag, s) => `<${tag}>${s}</${tag}>`
+    div = s => wrap("div", s)
+    span = s => wrap("span", s)
+
     // Inject the canvas
-    document.body.innerHTML += `<canvas id=${constants.canvasId} width=${constants.canvasDimensions[0]} height=${constants.canvasDimensions[1]}></canvas>`
+    const theCanvas =  `<canvas id=${constants.canvasId} width=${constants.canvasDimensions[0]} height=${constants.canvasDimensions[1]}></canvas>`
     // And the scripting box
-    document.body.innerHTML += `<div id=${constants.editTextId} contenteditable="true">brain.torque = -0.00; brain.thrust = 0.01</div>`
+    const theTextArea = `<textarea id=${constants.editTextId} rows="50" cols="100"}>${constants.initScript}</textarea>`
+    document.body.innerHTML += div(span(theCanvas) + span(theTextArea))
     return document.getElementById(constants.canvasId).getContext("2d")
 }
 
