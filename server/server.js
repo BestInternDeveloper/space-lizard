@@ -33,7 +33,7 @@ wsServer.on("request", function(request) {
     // accept connection - you should check "request.origin" to
     // make sure that client is connecting from your website
     // (http://en.wikipedia.org/wiki/Same_origin_policy)
-    // But I'm not doing this here, as its just a test...
+
     const connection = request.accept(null, request.origin); 
     console.log("User joined your channel!")
 
@@ -46,7 +46,7 @@ wsServer.on("request", function(request) {
     // Let's repeatedly send this
     //setInterval(() => connection.sendUTF(JSON.stringify(data)), 100)
 
-    // On recieving a message.
+    // On receiving a message
     connection.on("message", function(message) {
         if (message.type === "utf8") {
             var dataString = message.utf8Data;
